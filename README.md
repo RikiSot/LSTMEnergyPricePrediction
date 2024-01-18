@@ -7,7 +7,6 @@
 - [Model Architecture](#model-architecture)
 - [Training](#training)
 - [Deployment](#deployment)
-- [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
@@ -39,17 +38,30 @@ python app.py
 
 You can also access the live Gradio app through the following link:
 
-[Access the live app](https://your-gradio-app-link)
+[Access the live app](https://huggingface.co/spaces/RikiSot/energy-price-predictor)
 
 ## Model Architecture
 The LSTM model is constructed with configurable hyperparameters for the number of hidden units, layers, and dropout rate. The PyTorch framework facilitates the creation of the LSTM layers and the linear regression layer for output.
+The model takes a time series input of 3 * 24 elements of hourly data scaled between 0-1 for all columns, so the shape of the input is [BatchSize, 3 * 24, N features (20)].
 
 ## Training
-The model is trained using the data from [REE](https://www.ree.es/es/apidatos), with the training process supervised using TensorBoard for logging the results. Training involves:
+The model is trained using 2023 data from [REE](https://www.ree.es/es/apidatos). Data is previously preprocessed by:
+- Adding categorical variables in one hot encoding from datetime info for each date. Features added are:
+  - Day of the weekday (Monday-Sunday)
+  - Day of the month
+  - Month
+- Create sequences of 3 * 24 elements for each feature of the data (value of the time series and categorical variables).
+
+Training involves:
 - Preprocessing and loading the data using custom DataLoader instances.
 - Defining the LSTM model architecture with the specified hyperparameters.
-- Using an MSE loss function and the Adam optimizer.
+- Using MSE as loss function and the Adam optimizer.
 - Running the training loop for a set number of epochs, evaluating on the test set at each epoch.
+- Process is supervised using TensorBoard for logging the loss and a plot of evaluation data vs predictions.
+- An early stopping callback stops the training if validation loss stops improving after a certain number of epochs
+
+## Results
+With the hyperparameters that appear at hyperparameters.py model achieved a MSE loss of ~0.02 on the 
 
 ## Deployment
 The model is deployed using the Gradio library, allowing for an interactive web interface where users can input a date to receive energy price predictions. The deployment is hosted on Hugging Face spaces.
@@ -59,3 +71,9 @@ This project is open-sourced under the MIT license.
 
 ## Acknowledgements
 Special thanks to the Red Eléctrica de España for providing the energy market data API and to the open-source community for the tools and libraries used in this project.
+
+# Future improvements
+In a future update I would like to edit how the sequences are built, by only generating the sequence for the time series data, leaving the rest of categorical variables
+as an scalar input to the model. In this case, model architecture would have been adapted to the input by
+- One [Batch, Sequence-length, 1] LSTM input of the time series data
+- One [Batch, Features] input to stack of Dense layers.
