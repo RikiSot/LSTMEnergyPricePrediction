@@ -17,7 +17,7 @@ This project implements a Long Short-Term Memory (LSTM) neural network using PyT
 To set up the project environment, ensure you have Python 3.8+ installed, then follow these steps:
 1. Clone the repository:
 ```
-git clone https://github.com/your-username/iberian-energy-price-prediction.git
+git clone https://github.com/RikiSot/LSTMEnergyPricePrediction.git
 ```
 2. Navigate to the project directory:
 ```
@@ -61,10 +61,19 @@ Training involves:
 - An early stopping callback stops the training if validation loss stops improving after a certain number of epochs
 
 ## Results
-With the hyperparameters that appear at hyperparameters.py model achieved a MSE loss of ~0.02 on the 
+With the hyperparameters that appear at hyperparameters.py model achieved a MSE loss of ~0.02 on the test set. Data is scaled between 0-1
+so these are acceptable results!
+
+It is crucial to acknowledge that the dataset utilized in this project corresponds to the temporal context of 2023.
+As a result, the introduction of new data from the current year may yield variations from the training data, potentially leading to suboptimal performance in certain scenarios.
+This aspect underscores the nature of this project as a portfolio endeavor, with the primary goal of refining my model development and deployment skills.
+
+The versatility of the training pipeline is a notable feature, as it can be seamlessly adapted to accommodate diverse datasets.
+This adaptability is facilitated by the ability to modify Dataset classes for each unique situation, ensuring the robustness and applicability of the model across different data contexts.
 
 ## Deployment
-The model is deployed using the Gradio library, allowing for an interactive web interface where users can input a date to receive energy price predictions. The deployment is hosted on Hugging Face spaces.
+The model is deployed using the Gradio library, allowing for an interactive web interface where users can input a date to receive energy price predictions.
+The deployment is hosted on Hugging Face spaces.
 
 ## License
 This project is open-sourced under the MIT license.
