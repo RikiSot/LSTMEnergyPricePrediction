@@ -15,11 +15,14 @@ from hyperparameters import *
 # Setup directories
 data_dir = "data/price_data.csv"
 
+# name of the experiment by hyperparameters
+exp_name = f'LSTM_{NUM_LAYERS}_layers_{HIDDEN_UNITS}_units_{NUM_EPOCHS}_epochs'
+
 # Setup target device
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Tensorboard session
-writer = utils.create_writer(experiment_name='base', model_name='energy_price_lstm')
+writer = utils.create_writer(experiment_name='price_predictor', model_name=exp_name)
 
 # Create DataLoaders with help from data_setup.py
 train_dataloader, test_dataloader, eval_dataloader = data_setup.create_dataloaders(data_dir,
@@ -40,8 +43,8 @@ model = model.LSTMModel(
 
 # Set loss and optimizer
 loss_fn = torch.nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(),
-                             lr=LEARNING_RATE)
+optimizer = torch.optim.AdamW(model.parameters(),
+                              lr=LEARNING_RATE)
 
 # Start training with help from engine.py
 engine.train(model=model,
@@ -51,7 +54,8 @@ engine.train(model=model,
              optimizer=optimizer,
              epochs=NUM_EPOCHS,
              device=device,
-             writer=writer)
+             writer=writer,
+             patience=10)
 
 engine.validation(model=model,
                   eval_dataloader=eval_dataloader,
@@ -61,6 +65,6 @@ engine.validation(model=model,
 # Save the model with help from utils.py
 utils.save_model(model=model,
                  target_dir="models",
-                 model_name="model.pth")
+                 model_name=f'{exp_name}.pth')
 
 writer.close()

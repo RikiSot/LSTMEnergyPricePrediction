@@ -17,7 +17,6 @@ from download_price_data import get_price_data
 from data_setup import DemandDataset
 from model import LSTMModel
 
-from typing import Tuple
 from hyperparameters import *
 import pickle
 
@@ -56,7 +55,17 @@ def predict(date_str: str) -> (plt.Figure, float):
     end_date = datetime(date.year, date.month, date.day, date.hour)
     start_date = end_date - timedelta(hours=NUM_SEQUENCES)
 
-    data = get_price_data(start_date, end_date)
+    if end_date >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0):
+        print('Prediction requested is for new data. No baseline will be plotted')
+        data = get_price_data(start_date, end_date)
+        extended_data = []
+    else:
+        print('Prediction requested can be compared to actual data.')
+        extended_end_date = end_date + timedelta(hours=OUTPUT_SIZE)
+        data = get_price_data(start_date, extended_end_date)
+        extended_data = data[-OUTPUT_SIZE:].to_numpy().reshape(-1, 1)
+        data = data[:-OUTPUT_SIZE]
+
     scaler = load_scaler(scaler_file_path)
     X, index = prepare_prediction_data(data, NUM_SEQUENCES, scaler, target_col='value')
     # Take only last prediction if len of data is greater than model
@@ -89,7 +98,7 @@ def predict(date_str: str) -> (plt.Figure, float):
     # Plot results of the
     # Calculate the prediction time
     pred_time = round(timer() - start_time, 5)
-    fig = plot_prediction(yhat, X, index)
+    fig = plot_prediction(yhat, X, index, extended_data)
     return fig, pred_time
 
 
@@ -103,5 +112,6 @@ def prepare_prediction_data(data: pd.DataFrame, num_sequences: int, scaler: MinM
 
 
 if __name__ == '__main__':
-    date = datetime.now().strftime('%Y-%m-%d')
+    date = datetime.now() - timedelta(days=30)
+    date = date.strftime('%Y-%m-%d')
     predict(date)

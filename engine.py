@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple
 from torch.nn import CrossEntropyLoss
 from torch.utils.tensorboard.writer import SummaryWriter
 from torch.utils.data import DataLoader, ConcatDataset
-from utils import plot_validation
+from utils import EarlyStopping, plot_validation
 
 
 def train_step(model: torch.nn.Module,
@@ -139,6 +139,7 @@ def train(model: torch.nn.Module,
           loss_fn: torch.nn.Module,
           epochs: int,
           device: torch.device | str,
+          patience: int = 10,
           writer: SummaryWriter = None) -> Dict[str, List]:
     """Trains and tests a PyTorch model.
 
@@ -156,6 +157,7 @@ def train(model: torch.nn.Module,
       loss_fn: A PyTorch loss function to calculate loss on both datasets.
       epochs: An integer indicating how many epochs to train for.
       device: A target device to compute on (e.g. "cuda" or "cpu").
+      patience: number of epochs to wait after last time validation loss improved to stop by early stopping
       writer: A SummaryWriter() instance to log model results to.
 
     Returns:
@@ -181,6 +183,10 @@ def train(model: torch.nn.Module,
 
     # Loop through training and testing steps for a number of epochs
     model.scaler = train_dataloader.dataset.scaler
+
+    # initialize the early_stopping object
+    early_stopping = EarlyStopping(patience=patience, verbose=True)
+
     for epoch in tqdm(range(epochs)):
         train_loss, train_acc = train_step(model=model,
                                            dataloader=train_dataloader,
@@ -228,6 +234,12 @@ def train(model: torch.nn.Module,
         results["train_acc"].append(train_acc)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
+
+        early_stopping(test_loss, model)
+        if early_stopping.early_stop:
+            print(f'Early stopping at epoch {epoch}')
+            model = model.load_state_dict(early_stopping.best_model)
+            break
 
     # Return the filled results at the end of the epochs
     return results

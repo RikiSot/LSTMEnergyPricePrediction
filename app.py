@@ -18,4 +18,4 @@ demo = gr.Interface(fn=predict,  # mapping function from input to output
 
 # Launch the demo!
 demo.launch(debug=True,
-            share=True)
+            share=False)
